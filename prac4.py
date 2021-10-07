@@ -13,8 +13,14 @@ cs = digitalio.DigitalInOut(board.D5)
 # create the mcp object
 mcp = MCP.MCP3008(spi, cs)
 
-# create an analog input channel on pin 0
-chan = AnalogIn(mcp, MCP.P0)
+button = digitalio.DigitalInOut(board.D23)
+button.direction = digitalio.Direction.INPUT
+button.pull = digitalio.Pull.UP
 
-print(’Raw ADC Value: ’, chan.value)
-print(’ADC Voltage: ’ + str(chan.voltage) + ’V
+# create an analog input channel on pin 0
+chan = AnalogIn(mcp, MCP.P2)
+
+while(True):
+    if(button.value==0):
+        print("Raw ADC Value: ", chan.value)
+        print("ADC Voltage: " + str(chan.voltage) + "V")

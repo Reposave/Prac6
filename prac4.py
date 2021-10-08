@@ -15,7 +15,7 @@ def VoltageToTemp(voltage,t_coeff,vzero):
 def temp_sensor(results):
     chann = AnalogIn(mcp, MCP.P1) #Temp_Sensor
     results[0] = chann.value
-    results[1] = chann.voltage
+    results[1] = round(VoltageToTemp(chann.voltage,T_COEFF,VZERO), 1)
 
 #Obtain LDR results
 def ldr_sensor(results):
@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
     times = [10,5,1]
     times_interval = 0
+    
+    press_time = 0
 
     # create the spi bus
     spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
@@ -42,13 +44,11 @@ if __name__ == "__main__":
     # create the mcp object
     mcp = MCP.MCP3008(spi, cs)
 
-    #Setup the button with a 0.1s debounce delay
+    #Setup the button with a 0.1s debounce delay-----------------
     button = digitalio.DigitalInOut(board.D23)
     button.direction = digitalio.Direction.INPUT
     button.pull = digitalio.Pull.UP
     switch = Debouncer(button,interval=0.1)
-
-    # create an analog input channel on pin 2 for LDR
 
     print(f"{'Runtime' : <10}{'Temp Reading' : <15}{'Temp' : <10}{'Light Reading': <10}")
 
@@ -62,21 +62,30 @@ if __name__ == "__main__":
 
             #Creating new threads.
             temp = threading.Thread(target=temp_sensor,args=(temp_results,))
+            temp.daemon = True
             
-            ldr = threading.Thread(target=ldr_sensor,args=(ldr_results,))  
-            ldr.start()
-            ldr.join()
+            ldr = threading.Thread(target=ldr_sensor,args=(ldr_results,)) 
 
+            ldr.start()
             temp.start()
+            ldr.join()
             temp.join()
 
             total_time+=round(time.time()-start_time)
-            print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(round(VoltageToTemp(temp_results[1],T_COEFF,VZERO), 1)) +'C' : <10}{ldr_results[0] : <10}")
+            print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(temp_results[1]) +'C' : <10}{ldr_results[0] : <10}")
             
             start_time=time.time()
-        #checks for button release.
+        
+        #checks for button release.-------------------------------
+        if(switch.rose):
+            if((time.time()-press_time)>5):
+                print("Goodbye")
+                break
+
+        #checks for button press.---------------------
         if(switch.fell):
-            
+            press_time = time.time()
+
             if(times_interval==2):
                 times_interval=0
             else:

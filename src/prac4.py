@@ -3,6 +3,7 @@ import digitalio
 import board
 import threading
 import time
+import socket
 import adafruit_mcp3xxx.mcp3008 as MCP
 from adafruit_mcp3xxx.analog_in import AnalogIn
 from adafruit_debouncer import Debouncer
@@ -23,6 +24,14 @@ def ldr_sensor(results):
     results[0] = chann.value
 
 if __name__ == "__main__":
+
+    TCP_IP = '127.0.0.1'
+    TCP_PORT = 5005
+    BUFFER_SIZE = 1024
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((TCP_IP, TCP_PORT))
+
     #temp_sensor
     T_COEFF = 0.01
     VZERO = 0.4
@@ -75,7 +84,9 @@ if __name__ == "__main__":
             print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(temp_results[1]) +'C' : <10}{ldr_results[0] : <10}")
             
             start_time=time.time()
-        
+            MESSAGE = start_time+' '+temp_results[0] +' ' +temp_results[1]+' C ' + ldr_results[0]
+            s.send(MESSAGE)
+
         #checks for button release.-------------------------------
         if(switch.rose):
             if((time.time()-press_time)>5):
@@ -84,6 +95,8 @@ if __name__ == "__main__":
 
         #checks for button press.---------------------
         if(switch.fell):
+            s.close() #close socket.
+
             press_time = time.time()
 
             if(times_interval==2):

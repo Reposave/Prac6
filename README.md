@@ -1,6 +1,4 @@
-## A Simple Server with Python Flask
-
-This project simply serves up `"OK hand"` on port `:80` of your balena device.
+## Client Code.
 
 To get this project up and running, you will need to signup for a balena account [here][signup-page] and set up a device.
 Once you are set up with balena, you will need to clone this repo locally:

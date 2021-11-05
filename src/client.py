@@ -25,8 +25,8 @@ def ldr_sensor(results):
 
 if __name__ == "__main__":
 
-    TCP_IP = '127.0.0.1'
-    TCP_PORT = 5005
+    TCP_IP = '192.168.43.209'
+    TCP_PORT = 1234
     BUFFER_SIZE = 1024
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     #temp_sensor
     T_COEFF = 0.01
     VZERO = 0.4
-    print_time = 1
+    print_time = 10
     start_time = time.time()
     total_time = 0
 
@@ -84,8 +84,10 @@ if __name__ == "__main__":
             print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(temp_results[1]) +'C' : <10}{ldr_results[0] : <10}")
             
             start_time=time.time()
-            MESSAGE = start_time+' '+temp_results[0] +' ' +temp_results[1]+' C ' + ldr_results[0]
-            s.send(MESSAGE)
+            print(str(total_time) + ' ' + str(temp_results[0]) +' ' + str(temp_results[1]) +' C ' + str(ldr_results[0]))
+
+            MESSAGE = str(total_time) + ' ' + str(temp_results[0]) +' ' + str(temp_results[1]) +' C ' + str(ldr_results[0])
+            s.send(MESSAGE.encode())
 
         #checks for button release.-------------------------------
         if(switch.rose):

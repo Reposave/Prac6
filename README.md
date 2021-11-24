@@ -14,3 +14,15 @@ and push the code to the newly added remote:
 $ git push balena master
 ```
 It should take a few minutes for the code to push.
+
+The Client will send a sample of data every 10s. Messages start with a code first before being sent.
+
+Message symbol:
+c - check
+o - sendon
+x - sendoff
+s - sensors
+
+After the symbol, some messages contain the number of bytes and then the message.
+
+

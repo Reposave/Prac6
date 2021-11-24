@@ -115,23 +115,23 @@ if __name__ == "__main__":
         if((time.time()-start_time)>print_time):
             ldr_results = [0,0]
 
-            #Creating new threads.
-            temp = threading.Thread(target=temp_sensor,args=(temp_results,))
-            temp.daemon = True
-            
-            ldr = threading.Thread(target=ldr_sensor,args=(ldr_results,)) 
-
-            ldr.start()
-            temp.start()
-            ldr.join()
-            temp.join()
-
-            total_time+=round(time.time()-start_time)
-            print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(temp_results[1]) +'C' : <10}{ldr_results[0] : <10}")
-            
-            start_time=time.time()
-            
             if(temp_results[3] == "o"):
+                #Creating new threads.
+                temp = threading.Thread(target=temp_sensor,args=(temp_results,))
+                temp.daemon = True
+                
+                ldr = threading.Thread(target=ldr_sensor,args=(ldr_results,)) 
+                
+                ldr.start()
+                temp.start()
+                ldr.join()
+                temp.join()
+
+                total_time+=round(time.time()-start_time)
+                print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(temp_results[1]) +'C' : <10}{ldr_results[0] : <10}")
+            
+                start_time=time.time()
+            
                 now = datetime.now()
                 current_time = now.strftime("%H:%M:%S")
 

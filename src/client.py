@@ -7,6 +7,37 @@ import socket
 import adafruit_mcp3xxx.mcp3008 as MCP
 from adafruit_mcp3xxx.analog_in import AnalogIn
 from adafruit_debouncer import Debouncer
+from datetime import datetime
+
+MESSAGE = ""
+
+def TcpListener(results):
+    while(True):
+        data = s.recv(BUFFER_SIZE).decode()
+        results[0] = data
+
+        if(data == "x"):
+            sendoff(results) #Turn Off
+        elif(data == "o"):
+            sendon(results) #Turn On
+        elif(data == "c"):
+            check() #Status
+
+        time.sleep(sleep)
+
+def sendon(results):
+    results[3] = "o"
+    
+def sendoff(results):
+    results[3] = "x"
+
+def check():
+    lock.acquire()
+    TOSEND = 'c ' + temp_results[3] + ' ' + str(len(MESSAGE.encode('utf-8'))) + ' ' + MESSAGE
+    s.send(TOSEND.encode())
+    lock.release()
+    
+lock = threading.Lock()
 
 #Converts the Voltage to a temperature in degrees celcius
 def VoltageToTemp(voltage,t_coeff,vzero):
@@ -24,13 +55,29 @@ def ldr_sensor(results):
     results[0] = chann.value
 
 if __name__ == "__main__":
+    
+    sleep = 2
+
+    print("Hello")
 
     TCP_IP = '192.168.43.209'
-    TCP_PORT = 1234
+    TCP_PORT = 5003
     BUFFER_SIZE = 1024
-    
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((TCP_IP, TCP_PORT))
+
+    print("Client connected to Server!")
+
+    temp_results = [0,0,0,'o']
+
+    print("Starting thread...")
+    tcpListen = threading.Thread(target=TcpListener,args=(temp_results,))
+
+    tcpListen.daemon = True
+    #inputlistener.daemon = True
+
+    #inputlistener.start()
+    tcpListen.start()
 
     #temp_sensor
     T_COEFF = 0.01
@@ -66,7 +113,6 @@ if __name__ == "__main__":
 
         #if the difference between runtime and start time is greater than the print time, execute the body.
         if((time.time()-start_time)>print_time):
-            temp_results = [0,0]
             ldr_results = [0,0]
 
             #Creating new threads.
@@ -84,10 +130,19 @@ if __name__ == "__main__":
             print(f"{str(total_time)+'s' : <10}{temp_results[0] : <15}{str(temp_results[1]) +'C' : <10}{ldr_results[0] : <10}")
             
             start_time=time.time()
-            print(str(total_time) + ' ' + str(temp_results[0]) +' ' + str(temp_results[1]) +' C ' + str(ldr_results[0]))
+            
+            if(temp_results[3] == "o"):
+                now = datetime.now()
+                current_time = now.strftime("%H:%M:%S")
 
-            MESSAGE = str(total_time) + ' ' + str(temp_results[0]) +' ' + str(temp_results[1]) +' C ' + str(ldr_results[0])
-            s.send(MESSAGE.encode())
+                lock.acquire() #Using locks here to make sure the message isn't altered by other functions
+                MESSAGE = current_time + ', ' + str(temp_results[0]) +', ' + str(temp_results[1]) +'C, ' + str(ldr_results[0])
+                TOSEND = 's ' + str(len(MESSAGE.encode('utf-8'))) + ' ' + MESSAGE
+                s.send(TOSEND.encode())
+                lock.release()
+                print(TOSEND)
+            
+            time.sleep(sleep)
 
         #checks for button release.-------------------------------
         if(switch.rose):
